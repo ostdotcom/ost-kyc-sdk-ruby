@@ -1,0 +1,18 @@
+PATH
+  remote: .
+  specs:
+    kyc-sdk-ruby (2.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.6)
+  kyc-sdk-ruby!
+
+BUNDLED WITH
+   1.16.2
