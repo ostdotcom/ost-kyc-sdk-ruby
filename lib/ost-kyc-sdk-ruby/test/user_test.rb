@@ -26,10 +26,10 @@ class UserTest < Test::Unit::TestCase
   end
 
   def test_user_list_with_total_entry_in_meta
-    params = {order: 'asc', limit: 3, filters: {is_kyc_submitted: true}}
+    params = {order: 'asc', limit: 1, filters: {is_kyc_submitted: false}}
     result = user_obj.list(params)
-    assert_equal(result.data["meta"]["next_page_payload"]["limit"], 3)
-    assert_equal(result.data["meta"]["next_page_payload"]["filters"]["is_kyc_submitted"], "true")
+    assert_equal(result.data["meta"]["next_page_payload"]["limit"], 1)
+    assert_equal(result.data["meta"]["next_page_payload"]["filters"]["is_kyc_submitted"], "false")
   end
 
   def test_user_create
