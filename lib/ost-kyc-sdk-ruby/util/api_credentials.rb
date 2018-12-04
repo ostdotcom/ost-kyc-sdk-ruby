@@ -1,4 +1,4 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Util
 

@@ -1,10 +1,10 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Saas
 
     class Services
 
-      ## KYCSdk::Saas::Services
+      ## OstKycSdkRuby::Saas::Services
 
       attr_reader :services
 
@@ -33,7 +33,7 @@ module KYCSdk
 
       def set_manifest(params)
 
-        @services = KYCSdk::Saas::V2::Services.new(params)
+        @services = OstKycSdkRuby::Saas::Manifest.new(params)
 
       end
 

@@ -1,14 +1,16 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Saas
 
     class Base
 
-      include KYCSdk::Util::ServicesHelper
+      REGEX_VALUE = /\A[0-9a-z\.\-]+\z/i
+
+      include OstKycSdkRuby::Util::ServicesHelper
 
       attr_reader :http_helper
 
-      # KYCSdk::Saas::Base
+      # OstKycSdkRuby::Saas::Base
 
       # Initialize
       #
@@ -26,7 +28,7 @@ module KYCSdk
 
         params[:api_base_url] = sanitize_api_base_url(params[:api_base_url])
 
-        @http_helper = KYCSdk::Util::HTTPHelper.new(params)
+        @http_helper = OstKycSdkRuby::Util::HTTPHelper.new(params)
 
       end
 
@@ -40,17 +42,12 @@ module KYCSdk
       # Returns:
       #   id: (Integer)
       #
+      #
+      # if (null == params || !params.containsKey("id") || null == params.get("id")) {
+      #             throw new MissingParameter("id");
+      #         }
       def get_id!(params)
-        if params.has_key?(:id)
-          id = params[:id]
-          params.delete(:id)
-        elsif params.has_key?('id')
-          id = params['id']
-          params.delete('id')
-        else
-          fail "id missing in request params"
-        end
-        id
+        get_value_for_key(params, "id")
       end
 
       # Get user_id key from params hash and delete it
@@ -62,16 +59,26 @@ module KYCSdk
       #   id: (Integer)
       #
       def get_user_id!(params)
-        if params.has_key?(:user_id)
-          user_id = params[:user_id]
-          params.delete(:user_id)
-        elsif params.has_key?('user_id')
-          user_id = params['user_id']
-          params.delete('user_id')
-        else
-          fail "user_id missing in request params"
+        get_value_for_key(params, "user_id")
+      end
+
+      # Get value for specific key
+      #
+      # Arguments:
+      #   params: (Hash)
+      #
+      # Returns:
+      #   id: (Integer)
+      #
+      def get_value_for_key(params, key)
+        if params.has_key?(key.to_sym)
+          value = params.delete(key.to_sym)
+        elsif params.has_key?(key.to_s)
+          value = params.delete(key.to_s)
         end
-        user_id
+        raise "#{key.to_s} missing in request params" if value.nil?
+        raise "#{key.to_s} invalid in request params" if !(is_valid_value?(value.to_s))
+        value
       end
 
       # Sanitize API Base URL
@@ -88,6 +95,18 @@ module KYCSdk
 
         return api_base_url
 
+      end
+
+      # Is the value is valid for given key
+      #
+      # * Author: Puneet
+      # * Date: 10/10/2017
+      # * Reviewed By: Sunil
+      #
+      # @return [Boolean] returns a boolean
+      #
+      def is_valid_value?(value)
+        value =~ REGEX_VALUE
       end
 
     end

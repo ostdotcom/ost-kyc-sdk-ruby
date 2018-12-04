@@ -1,10 +1,10 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Util
 
     class HTTPHelper
 
-      # KYCSdk::Util::HTTPHelper
+      # OstKycSdkRuby::Util::HTTPHelper
 
       require "uri"
       require "open-uri"
@@ -25,6 +25,13 @@ module KYCSdk
         @api_key = params[:api_key]
         @api_secret = params[:api_secret]
         @api_spec = params[:api_spec]
+        @timeout = 10
+        if (params.key?(:config))
+          config = params[:config]
+          if (config.key?(:timeout))
+            @timeout = config[:timeout]
+          end
+        end
       end
 
       # Send POST requests
@@ -34,18 +41,15 @@ module KYCSdk
       #   request_params: (Hash)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def send_post_request(endpoint, request_params)
         perform_and_handle_exceptions('u_hh_1', 'POST request failed') do
-          base_params = get_base_params(endpoint, request_params)
-          uri = post_api_uri(endpoint)
+          escaped_query_string = get_query_string(endpoint, request_params)
+          uri = URI(get_api_url(endpoint))
           http = setup_request(uri)
-          r_params = base_params.merge(request_params)
-          query_string = build_nested_query(r_params)
-          escaped_query_string = URI.escape(query_string, '*')
           if @api_spec
-            return KYCSdk::Util::Result.success({data: {request_uri: uri.to_s, request_type: 'POST', request_params: escaped_query_string}})
+            return OstKycSdkRuby::Util::Result.success({data: {request_uri: uri.to_s, request_type: 'POST', request_params: escaped_query_string}})
           else
             result = http.post(uri.path, escaped_query_string)
             return format_response(result)
@@ -60,21 +64,18 @@ module KYCSdk
       #   request_params: (Hash)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def send_get_request(endpoint, request_params)
         perform_and_handle_exceptions('u_hh_2', 'GET request Failed') do
-          base_params = get_base_params(endpoint, request_params)
-          r_params = base_params.merge(request_params)
-          query_string = build_nested_query(r_params)
-          escaped_query_string = URI.escape(query_string, '*')
-          raw_url = get_api_url(endpoint) + "?" + escaped_query_string
+          escaped_query_string = get_query_string(endpoint, request_params)
+          raw_url = get_api_url(endpoint) + "?#{escaped_query_string}"
           uri = URI(raw_url)
           if @api_spec
-            return KYCSdk::Util::Result.success({data: {request_uri: uri.to_s.split("?")[0], request_type: 'GET', request_params: escaped_query_string}})
+            return OstKycSdkRuby::Util::Result.success({data: {request_uri: uri.to_s.split("?")[0], request_type: 'GET', request_params: escaped_query_string}})
           else
             result = {}
-            Timeout.timeout(15) do
+            Timeout.timeout(@timeout) do
               result = Net::HTTP.get_response(uri)
             end
             return format_response(result)
@@ -82,12 +83,18 @@ module KYCSdk
         end
       end
 
+      def get_signature_for_test(endpoint, request_params)
+        escaped_query_string = get_escaped_query_string(request_params)
+        string_to_sign = "#{endpoint}?#{escaped_query_string}"
+        generate_signature(string_to_sign)
+      end
+
       private
 
       def setup_request(uri)
         http = Net::HTTP.new(uri.host, uri.port)
-        http.read_timeout = 15
-        http.open_timeout = 15
+        http.read_timeout = @timeout
+        http.open_timeout = @timeout
         if uri.scheme == "https"
           http.use_ssl = true
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -95,26 +102,23 @@ module KYCSdk
         http
       end
 
-      def get_base_params(endpoint, request_params)
-        request_timestamp = Time.now.to_i.to_s
+      def get_query_string(endpoint, request_params)
+        request_timestamp = Time.now.to_i
         request_params = request_params.merge("request_timestamp" => request_timestamp, "api_key" => @api_key)
+        escaped_query_string = get_escaped_query_string(request_params)
+        string_to_sign = endpoint + "?" + escaped_query_string
+        signature = generate_signature(string_to_sign)
+        "#{escaped_query_string}&signature=#{escape(signature)}"
+      end
 
+      def get_escaped_query_string(request_params)
         sorted_request_params = sort_param(request_params)
-        request_params_str = build_nested_query(sorted_request_params)
-        request_params_escaped_str = URI.escape(request_params_str, "*")
-        str = endpoint + '?' + request_params_escaped_str
-        signature = generate_signature(str)
-        {"request_timestamp" => request_timestamp, "signature" => signature, "api_key" => @api_key}
+        build_nested_query(sorted_request_params)
       end
 
       def generate_signature(string_to_sign)
         digest = OpenSSL::Digest.new('sha256')
-        signature = OpenSSL::HMAC.hexdigest(digest, @api_secret, string_to_sign)
-        signature
-      end
-
-      def post_api_uri(endpoint)
-        URI(@api_base_url + endpoint)
+        OpenSSL::HMAC.hexdigest(digest, @api_secret, string_to_sign)
       end
 
       def get_api_url(endpoint)
@@ -124,15 +128,15 @@ module KYCSdk
       def build_nested_query(value, prefix = nil)
         case value
         when Array
-          value.map { |v|
+          value.map {|v|
             build_nested_query(v, "#{prefix}[]")
           }.join("&")
         when Hash
-          value.map { |k, v|
+          value.map {|k, v|
             build_nested_query(v, prefix ? "#{prefix}[#{k}]" : k)
           }.reject(&:empty?).join('&')
-        # when nil
-        #   "#{escape(prefix)}="
+          # when nil
+          #   "#{escape(prefix)}="
         else
           raise ArgumentError, "value must be a Hash" if prefix.nil?
           "#{escape(prefix)}=#{escape(value)}"
@@ -140,7 +144,8 @@ module KYCSdk
       end
 
       def escape(s)
-        URI.encode_www_form_component(s)
+        s = URI.encode_www_form_component(s)
+        URI.escape(s, "*")
       end
 
       # Method which is called in service perform and handle exceptions
@@ -149,7 +154,7 @@ module KYCSdk
         begin
           yield if block_given?
         rescue StandardError => se
-          KYCSdk::Util::Result.exception(se, {error: err_code, error_message: err_message})
+          OstKycSdkRuby::Util::Result.exception(se, {error: err_code, error_message: err_message})
         end
       end
 
@@ -190,7 +195,7 @@ module KYCSdk
       def format_internal_response(response)
         json_raw_response = JSON.parse(response.body)
         if json_raw_response['success']
-          KYCSdk::Util::Result.success(
+          OstKycSdkRuby::Util::Result.success(
               {
                   data: json_raw_response['data'],
                   http_code: response.code
@@ -198,7 +203,7 @@ module KYCSdk
           )
         else
           err_data = json_raw_response['err']
-          KYCSdk::Util::Result.error(
+          OstKycSdkRuby::Util::Result.error(
               {
                   error: err_data['code'],
                   internal_id: err_data['internal_id'],
@@ -212,24 +217,24 @@ module KYCSdk
 
       def format_external_response(response_code)
         case response_code.to_i
-          when 502
-            code = 'BAD_GATEWAY'
-            internal_id = 'SDK(BAD_GATEWAY)'
-            message = 'Something went wrong.'
-          when 503
-            code = 'SERVICE_UNAVAILABLE'
-            internal_id = 'SDK(SERVICE_UNAVAILABLE)'
-            message = 'API under maintenance.'
-          when 504
-            code = 'GATEWAY_TIMEOUT'
-            internal_id = 'SDK(GATEWAY_TIMEOUT)'
-            message = 'Request timed out.'
-          else
-            code = 'SOMETHING_WENT_WRONG'
-            internal_id = 'SDK(SOMETHING_WENT_WRONG)'
-            message = 'Something went wrong.'
+        when 502
+          code = 'BAD_GATEWAY'
+          internal_id = 'SDK(BAD_GATEWAY)'
+          message = 'Something went wrong.'
+        when 503
+          code = 'SERVICE_UNAVAILABLE'
+          internal_id = 'SDK(SERVICE_UNAVAILABLE)'
+          message = 'API under maintenance.'
+        when 504
+          code = 'GATEWAY_TIMEOUT'
+          internal_id = 'SDK(GATEWAY_TIMEOUT)'
+          message = 'Request timed out.'
+        else
+          code = 'SOMETHING_WENT_WRONG'
+          internal_id = 'SDK(SOMETHING_WENT_WRONG)'
+          message = 'Something went wrong.'
         end
-        KYCSdk::Util::Result.error(
+        OstKycSdkRuby::Util::Result.error(
             {
                 error: code,
                 internal_id: internal_id,

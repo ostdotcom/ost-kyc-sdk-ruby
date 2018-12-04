@@ -1,4 +1,4 @@
-[KYC Ruby SDK v2.0](https://github.com/OpenSTFoundation/kyc-sdk-ruby) November 23 2018
+[OST KYC Ruby SDK v2.0](https://github.com/OpenSTFoundation/ost-kyc-sdk-ruby) December 4 2018
 ---
 
 Initial release of the official OST KYC Ruby SDK<br />
