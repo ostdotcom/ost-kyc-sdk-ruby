@@ -1,10 +1,10 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Util
 
     class Result
 
-      # KYCSdk::Util::Result
+      # OstKycSdkRuby::Util::Result
 
       attr_accessor :error,
                     :error_message,
@@ -123,7 +123,7 @@ module KYCSdk
       # Error
       #
       # Returns:
-      #   obj: (KYCSdk::Util::Result)
+      #   obj: (OstKycSdkRuby::Util::Result)
       #
       def self.error(params)
         new(params)
@@ -132,7 +132,7 @@ module KYCSdk
       # Success
       #
       # Returns:
-      #   obj: (KYCSdk::Util::Result)
+      #   obj: (OstKycSdkRuby::Util::Result)
       #
       def self.success(params)
         new(params.merge!(no_error))
@@ -141,7 +141,7 @@ module KYCSdk
       # Exception
       #
       # Returns:
-      #   obj: (KYCSdk::Util::Result)
+      #   obj: (OstKycSdkRuby::Util::Result)
       #
       def self.exception(e, params = {})
         obj = new(params)

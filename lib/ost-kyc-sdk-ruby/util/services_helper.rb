@@ -1,4 +1,4 @@
-module KYCSdk
+module OstKycSdkRuby
 
   module Util
 
@@ -13,20 +13,20 @@ module KYCSdk
       #   block: (Proc)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def perform_and_handle_exceptions(err_code = 'swt', err_message = 'Something Went Wrong', &block)
         begin
           yield if block_given?
         rescue StandardError => se
-          KYCSdk::Util::Result.exception(se, {error: err_code, error_message: err_message, data: @params} )
+          OstKycSdkRuby::Util::Result.exception(se, {error: err_code, error_message: err_message, data: @params} )
         end
       end
 
       # Success
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def success
         success_with_data({})
@@ -38,14 +38,14 @@ module KYCSdk
       #   data: (Hash)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def success_with_data(data)
 
         # Allow only Hash data to pass ahead
         data = {} unless Util::CommonValidator.is_a_hash?(data)
 
-        KYCSdk::Util::Result.success({data: data})
+        OstKycSdkRuby::Util::Result.success({data: data})
 
       end
 
@@ -57,11 +57,11 @@ module KYCSdk
       #   data: (Hash)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def error_with_data(code, msg, data = {})
 
-        KYCSdk::Util::Result.error(
+        OstKycSdkRuby::Util::Result.error(
             {
                 error: code,
                 error_message: msg,
@@ -81,11 +81,11 @@ module KYCSdk
       #   data: (Hash optional)
       #
       # Returns:
-      #   KYCSdk::Util::Result
+      #   OstKycSdkRuby::Util::Result
       #
       def exception_with_data(e, code, msg, data = {})
 
-        KYCSdk::Util::Result.exception(
+        OstKycSdkRuby::Util::Result.exception(
             e, {
             error: code,
             error_message: msg,
