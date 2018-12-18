@@ -75,6 +75,30 @@ params = {user_id: 11007, first_name:'YOGESH',  last_name:'SAWANT',  birthdate:'
 ost_kyc_users_kyc_object.submit_kyc(params).to_json
 ```
 
+Send Approve Email to User:
+
+```ruby
+## Params should have all the fields which are present in kyc config ##
+params = {user_id: 11550}
+ost_kyc_users_kyc_object.email_approve(params).to_json
+```
+
+Send Deny Email to User:
+
+```ruby
+## Params should have all the fields which are present in kyc config ##
+params = {user_id: 11550}
+ost_kyc_users_kyc_object.email_deny(params).to_json
+```
+
+Send Report Issue Email to User:
+
+```ruby
+## Params should have all the fields which are present in kyc config ##
+params = {user_id: 11550}
+ost_kyc_users_kyc_object.email_report_issue(params).to_json
+```
+
 Get a list of existing users kyc and other data:
 
 ```ruby
