@@ -20,6 +20,24 @@ class UserKycTest < Test::Unit::TestCase
     assert_equal(result.success?, false )
   end
 
+  def test_email_approve
+    params = {user_id: ENV['USER_ID']}
+    result = user_kyc_obj.email_approve(params)
+    is_unprocessable_entity(result)
+  end
+
+  def test_email_deny
+    params = {user_id: ENV['USER_ID']}
+    result = user_kyc_obj.email_deny(params)
+    is_unprocessable_entity(result)
+  end
+
+  def test_email_report_issue
+    params = {user_id: ENV['USER_ID']}
+    result = user_kyc_obj.email_report_issue(params)
+    is_unprocessable_entity(result)
+  end
+
   def test_user_kyc_list
     result = user_kyc_obj.list()
     assert_equal(result.success?, true )
@@ -35,6 +53,12 @@ class UserKycTest < Test::Unit::TestCase
     params = {files: {selfie: "image/jpeg"}}
     result = user_kyc_obj.get_presigned_url_post(params)
     assert_equal(result.success?, true )
+  end
+
+  def is_unprocessable_entity(result)
+    if !result.success?
+      assert_equal(result.error, "UNPROCESSABLE_ENTITY")
+    end
   end
 
 

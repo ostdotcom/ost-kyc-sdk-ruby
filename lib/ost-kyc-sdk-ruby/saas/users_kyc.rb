@@ -38,6 +38,42 @@ module OstKycSdkRuby
         http_helper.send_post_request("#{@url_prefix}/#{get_user_id!(params)}", params)
       end
 
+      # Send Approve Email to User
+      #
+      # Arguments:
+      #   params: (Hash)
+      #
+      # Returns:
+      #   response: (OstKycSdkRuby::Util::Result)
+      #
+      def email_approve(params)
+        http_helper.send_post_request("#{@url_prefix}/#{get_user_id!(params)}/email/approve", params)
+      end
+
+      # Send Deny Email to User
+      #
+      # Arguments:
+      #   params: (Hash)
+      #
+      # Returns:
+      #   response: (OstKycSdkRuby::Util::Result)
+      #
+      def email_deny(params)
+        http_helper.send_post_request("#{@url_prefix}/#{get_user_id!(params)}/email/deny", params)
+      end
+
+      # Send Report Issue Email to User
+      #
+      # Arguments:
+      #   params: (Hash)
+      #
+      # Returns:
+      #   response: (OstKycSdkRuby::Util::Result)
+      #
+      def email_report_issue(params)
+        http_helper.send_post_request("#{@url_prefix}/#{get_user_id!(params)}/email/report-issue", params)
+      end
+
       # Get an existing User Kyc
       #
       # Arguments:
